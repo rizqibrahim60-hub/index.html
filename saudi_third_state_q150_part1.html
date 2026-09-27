@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تاريخ الدولة السعودية الثالثة - الجزء الثاني</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Almarai:wght@700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', 'Almarai', sans-serif; }
+        body { background-color: #051329; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        
+        .main-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; background: #08162e; padding: 10px 20px; border-radius: 50px; border: 1px solid #d4af37; justify-content: center; box-shadow: 0 10px 25px rgba(0,0,0,0.4); z-index: 1000; align-items: center; }
+        .btn-ctrl { border: none; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; color: #ffffff; transition: all 0.2s ease; }
+        .btn-nav { background: #1e3a8a; } 
+        .btn-pdf { background: #0284c7; } 
+        .btn-img { background: #10b981; } 
+        .btn-pen { background: #b45309; } 
+        .btn-pen.active { background: #d97706; border: 2px solid #fff; box-shadow: 0 0 10px #d97706; }
+        .btn-edit-q { background: #0d9488; }
+        .btn-reset-ans { background: #d97706; }
+        .btn-delete-q { background: #dc2626; }
+        .btn-print-all { background: #d97706; color: #ffffff; }
+        .btn-save-file { background: #7c3aed; }
+
+        .pen-toolbar { display: none; gap: 12px; margin-bottom: 15px; background: #111d38; padding: 8px 22px; border-radius: 30px; border: 1.5px solid #10b981; align-items: center; z-index: 1000; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .color-dot { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; display: inline-block; transition: 0.2s; }
+        .color-dot.selected { transform: scale(1.25); border-width: 3px; border-color: #ffd700; }
+        .pen-size-select { background: #051329; color: #fff; border: 1px solid #d4af37; padding: 4px 12px; border-radius: 10px; font-weight: bold; font-size: 13px; }
+        .btn-clear-canvas { background: #ef4444; color: white; border: none; padding: 6px 14px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .btn-clear-canvas:hover { background: #dc2626; }
+
+        #quiz-app-wrapper { position: relative; width: 100%; max-width: 980px; }
+        
+        #quiz-app { width: 100%; background: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6); border: 4px solid #081d3d; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        #drawCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 500; touch-action: none; border-radius: 24px; }
+        #drawCanvas.drawing-active { 
+            pointer-events: auto; 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="%23ffd700" stroke="%23051329" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>') 2 32, crosshair; 
+        }
+
+        .top-header {
+            background: linear-gradient(180deg, #071c3d 0%, #0d2859 100%);
+            padding: 18px 30px;
+            color: #ffffff;
+            border-bottom: 4px solid #00a8e8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-center { text-align: center; flex-grow: 1; }
+        .main-title { font-size: 20px; font-weight: 900; color: #ffffff; line-height: 1.2; }
+        .sub-title { color: #00b4d8; font-size: 13px; font-weight: 700; margin-top: 3px; }
+        .author-name { color: #ffffff; font-size: 14px; font-weight: 800; margin-top: 4px; }
+        .header-icon-circle { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #5279a4; background: rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+
+        .progress-bar-container { background: #e2e8f0; height: 6px; width: 100%; }
+        .progress-bar { background: #10b981; height: 100%; width: 1%; transition: width 0.2s ease; }
+
+        .status-row { display: flex; justify-content: space-between; padding: 12px 40px 0 40px; font-size: 15px; font-weight: 900; color: #0d2859; }
+
+        .card-body { padding: 20px 40px 30px 40px; flex-grow: 1; display: flex; flex-direction: column; gap: 16px; justify-content: center; }
+
+        .main-question-card { border: 2.5px solid #0d2859; border-radius: 18px; padding: 18px 24px; background: #ffffff; box-shadow: 0 4px 15px rgba(13, 40, 89, 0.04); }
+        .question-header-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+        .q-right-group { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
+        .badge-q-tag { background: #0a214d; color: #ffffff; padding: 7px 18px; border-radius: 10px; font-size: 17px; font-weight: 800; white-space: nowrap; }
+        .q-text-content { font-size: 18px; font-weight: 800; color: #0f172a; line-height: 1.4; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .opt-btn { background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 12px; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s ease; text-align: right; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+        .opt-btn:hover:not([disabled]) { border-color: #0284c7; background: #f0f9ff; transform: translateY(-2px); }
+        .opt-letter { width: 32px; height: 32px; background: #e2e8f0; color: #0f2c59; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 15px; flex-shrink: 0; margin-right: 12px; }
+        .opt-text { font-size: 15px; font-weight: 800; color: #1e293b; flex-grow: 1; }
+
+        .opt-btn.correct { background: #ecfdf5 !important; border-color: #10b981 !important; }
+        .opt-btn.correct .opt-letter { background: #10b981 !important; color: #ffffff !important; }
+        .opt-btn.wrong { background: #fef2f2 !important; border-color: #ef4444 !important; }
+        .opt-btn.wrong .opt-letter { background: #ef4444 !important; color: #ffffff !important; }
+
+        .check-mark {
+            font-size: 20px;
+            font-weight: 900;
+            color: #10b981;
+            margin-right: auto;
+            margin-left: 10px;
+            background: #d1fae5;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px solid #10b981;
+        }
+
+        #result-screen { display: none; text-align: center; padding: 40px 20px; }
+        .result-score { font-size: 48px; font-weight: 900; color: #10b981; margin: 15px 0; }
+        .btn-restart { background: #0f2c59; color: #ffffff; border: none; padding: 12px 35px; border-radius: 25px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 20px; }
+
+        .bottom-footer {
+            background: linear-gradient(180deg, #071c3d 0%, #0d2859 100%);
+            border-top: 4px solid #00a8e8;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #ffffff;
+        }
+
+        .footer-sec { display: flex; align-items: center; gap: 10px; }
+        .footer-sec-center { text-align: center; }
+        .footer-icon-circle { width: 40px; height: 40px; background: rgba(0, 180, 216, 0.12); border: 1.5px solid #00a8e8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #00b4d8; }
+        .footer-meta { display: flex; flex-direction: column; }
+        .footer-text-title { font-size: 11px; color: #90e0ef; font-weight: 700; }
+        .footer-text-val { font-size: 14px; font-weight: 900; direction: ltr; color: #caf0f8; letter-spacing: 0.5px; }
+        .footer-author-main { font-size: 17px; font-weight: 900; color: #ffffff; }
+
+        @media print {
+            body { background: none; padding: 0; }
+            .main-controls, .pen-toolbar, .progress-bar-container, .status-row, #drawCanvas { display: none !important; }
+            #quiz-app { box-shadow: none; border: 2px solid #081d3d; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-controls">
+        <button class="btn-ctrl btn-nav" id="btn-prev" onclick="prevQ()">➔ السابق</button>
+        <button class="btn-ctrl btn-pen" id="penToggleBtn" onclick="togglePen()">✏️ قلم الشرح الحقيقي</button>
+        <button class="btn-ctrl btn-edit-q" onclick="editCurrentQuestion()">📝 تعديل السؤال</button>
+        <button class="btn-ctrl btn-nav" id="btn-next" onclick="nextQ()">التالي ⬅</button>
+        <div style="width:1px; height:20px; background:#d4af37;"></div>
+        <button class="btn-ctrl btn-pdf" onclick="window.print()">📄 طباعة السؤال الحالي PDF</button>
+        <button class="btn-ctrl btn-print-all" onclick="printAllQuestionsPDF()">🖨️ تصدير الكل PDF</button>
+        <button class="btn-ctrl btn-img" onclick="exportImage()">🖼️ تصدير صورة مميزة الإجابة PNG</button>
+        <button class="btn-ctrl btn-save-file" onclick="saveModifiedFile()">💾 حفظ التعديلات في ملف</button>
+        <button class="btn-ctrl btn-reset-ans" onclick="resetCurrentAnswer()">🔄 مسح الإجابة</button>
+        <button class="btn-ctrl btn-delete-q" onclick="deleteCurrentQuestion()">❌ حذف السؤال</button>
+    </div>
+
+    <div class="pen-toolbar" id="penToolbar">
+        <span style="color:#d4af37; font-weight:bold; font-size:13px;">الألوان:</span>
+        <span class="color-dot selected" style="background: #e11d48;" onclick="setPenColor('#e11d48', this)" title="أحمر"></span>
+        <span class="color-dot" style="background: #2563eb;" onclick="setPenColor('#2563eb', this)" title="أزرق"></span>
+        <span class="color-dot" style="background: #16a34a;" onclick="setPenColor('#16a34a', this)" title="أخضر"></span>
+        <span class="color-dot" style="background: #ffd700;" onclick="setPenColor('#ffd700', this)" title="ذهبي"></span>
+        <span class="color-dot" style="background: #ffffff;" onclick="setPenColor('#ffffff', this)" title="أبيض"></span>
+
+        <span style="color:#d4af37; font-weight:bold; font-size:13px; margin-right:5px;">السماكة:</span>
+        <select class="pen-size-select" id="penSizeSelect" onchange="setPenSize(this.value)">
+            <option value="1.5">خط رفيع دقيق</option>
+            <option value="2.5" selected>قلم حقيقي مثالي</option>
+            <option value="5">قلم كتابة واضح</option>
+            <option value="12">قلم تظليل عريض</option>
+        </select>
+
+        <button class="btn-clear-canvas" onclick="clearCanvas()">🗑️ مسح الخطوط</button>
+    </div>
+
+    <div id="quiz-app-wrapper">
+        <canvas id="drawCanvas" width="980" height="561"></canvas>
+        <div id="quiz-app">
+            <div class="top-header">
+                <div class="header-icon-circle">⭐</div>
+                <div class="header-center">
+                    <div class="main-title">تاريخ الدولة السعودية الثالثة - الجزء الثاني (<span id="total-q-badge">75</span> سؤال)</div>
+                    <div class="sub-title">معارك التوحيد وضم الأقاليم وإعلان المملكة</div>
+                    <div class="author-name">إبراهيم أبوزيد | معلم ومدرب وباحث</div>
+                </div>
+                <div class="header-icon-circle">📜</div>
+            </div>
+
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar" style="width: 1%;"></div>
+            </div>
+
+            <div id="quiz-screen">
+                <div class="status-row">
+                    <span id="question-count">السؤال 1 من 75</span>
+                    <span id="score-count">النقاط: 0</span>
+                </div>
+
+                <div class="card-body">
+                    <div class="main-question-card">
+                        <div class="question-header-row">
+                            <div class="q-right-group">
+                                <div class="badge-q-tag" id="q-badge">السؤال 1</div>
+                                <div class="q-text-content" id="q-text">جاري تحميل الأسئلة...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="options-grid" id="options-container"></div>
+                </div>
+            </div>
+
+            <div id="result-screen">
+                <h2 style="font-size: 28px; color: #0f2c59; font-weight: 900;">اكتمل الاختبار بنجاح!</h2>
+                <div class="result-score" id="final-score">0 / 75</div>
+                <p id="result-message" style="font-size: 18px; font-weight: 700; color: #475569;"></p>
+                <button class="btn-restart" onclick="restartQuiz()">إعادة الاختبار 🔄</button>
+            </div>
+
+            <div class="bottom-footer">
+                <div class="footer-sec" style="direction: ltr;">
+                    <div class="header-icon-circle" style="width:40px; height:40px; font-size:18px;">✈</div>
+                    <div class="footer-meta" style="text-align: left;">
+                        <span class="footer-text-title">حساب تليجرام</span>
+                        <span class="footer-text-val">t.me/myibhistoricy</span>
+                    </div>
+                </div>
+
+                <div class="footer-sec-center">
+                    <div class="footer-author-main">إبراهيم أبوزيد</div>
+                </div>
+
+                <div class="footer-sec">
+                    <div class="footer-meta" style="text-align: right;">
+                        <span class="footer-text-title">رقم الهاتف</span>
+                        <span class="footer-text-val">966 55 783 1353</span>
+                    </div>
+                    <div class="header-icon-circle" style="width:40px; height:40px; font-size:18px;">📞</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var rawCardsData = [
+            { "q": "في أي سنة هجرية تمكن الملك عبد العزيز من ضم منطقة عسير بالكامل تحت راية الدولة السعودية الثالثة؟", "options": ["عام 1339 هـ - 1341 هـ", "عام 1319 هـ", "عام 1351 هـ", "عام 1331 هـ"], "correct": 0 },
+            { "q": "ما هي المعركة البارزة التي قادها الأمير خالد بن لؤي لصالح الملك عبد العزيز في الحجاز سنة 1337 هـ؟", "options": ["معركة تربة", "معركة السبلة", "معركة الجهراء", "معركة جراب"], "correct": 0 },
+            { "q": "كيف تعامل الملك عبد العزيز مع أعيان وعلماء مدينة مكة المكرمة بعد دخولها سلمياً سنة 1343 هـ؟", "options": ["بالترحيب وتأمينهم على أموالهم وأرواحهم وحرمة مقدساتهم، وإشراكهم في الشورى", "بنفي العلماء خارج الحجاز ومصادرة أملاكهم", "فرض الأحكام العسكرية والقوانين الأجنبية عليهم", "إغلاق الحرم المكي وتوقف مناسك الحج لسنوات"], "correct": 0 },
+            { "q": "من هو الشريف الذي انسحب من مكة إلى جدة ثم غادر البلاد بعد دخول الملك عبد العزيز سنة 1343 هـ؟", "options": ["الشريف علي بن الحسين", "الشريف حسين بن علي", "الشريف عبد المعين", "الشريف خالد بن لؤي"], "correct": 0 },
+            { "q": "في أي سنة هجرية تم الاستسلام النهائي لمدينة جدة وضمها للسيادة السعودية؟", "options": ["عام 1344 هـ (1925 م)", "عام 1319 هـ", "عام 1331 هـ", "عام 1351 هـ"], "correct": 0 },
+            { "q": "ما هو اللقب الرسمي الذي أُطلق على الملك عبد العزيز بعد اكتمال ضم الحجاز ونجد سنة 1344 هـ؟", "options": ["ملك الحجاز وسلطان نجد وملحقاتها", "خادم الحرمين الشريفين منذ ذلك الحين", "أمير المؤمنين وسلطان العرب", "ملك المملكة العربية السعودية فوراً"], "correct": 0 },
+            { "q": "ما هي المعركة التي دارت رحاها في روضة 'السبلة' بين قوات الملك عبد العزيز وقوات الإخوان سنة 1348 هـ؟", "options": ["معركة السبلة", "معركة تربة", "معركة أم رضمة", "معركة جراب"], correct: 0 },
+            { "q": "من هما أبرز قادة حركة الإخوان المعارضة اللذان خاضا معركة السبلة ضد الملك عبد العزيز؟", "options": ["سلطان بن بجاد وفيصل الدويش", "خالد بن لؤي ومحمد بن طلال", "عجلان العجلان ودهام بن دواس", "عبد العزيز بن متعب آل رشيد"], correct: 0 },
+            { "q": "ما هي المعركة اللاحقة للسبلة التي حدثت في شمال المملكة لإخماد آخر جيوب التمرد سنة 1348 - 1349 هـ؟", "options": ["معركة أم رضمة", "معركة الجهراء", "معركة الضلع", "معركة الشتنان"], correct: 0 },
+            { "q": "متى صدر المرسوم الملكي التاريخي بتوحيد اسم الدولة لتصبح 'المملكة العربية السعودية'؟", "options": ["في 17 جمادى الأولى 1351 هـ (الموافق 23 سبتمبر 1932 م)", "في 1 محرم 1350 هـ", "في 15 ربيع الأول 1344 هـ", "في 10 ذو الحجة 1360 هـ"], correct: 0 },
+            { "q": "ما هو الحدث التاريخي العالمي الذي تم الاحتفال به رسمياً في المملكة ليوافق يومها الوطني سنوياً؟", "options": ["صدور مرسوم توحيد المملكة العربية السعودية في 23 سبتمبر", "تاريخ استرداد الرياض 1319 هـ", "تاريخ فتح الأحساء 1331 هـ", "تاريخ إعلان ملكية الحجاز ونجد 1344 هـ"], correct: 0 },
+            { "q": "كيف كانت طبيعة العلاقات السياسية والدبلوماسية للمملكة مع بريطانيا عقب إعلان التوحيد؟", "options": ["قائمة على الندية التامة وتوقيع معاهدات استقلال متبادلة (كمعاهدة جدة 1927 م)", "تبعية مطلقة وتنفيذ لكافة الأوامر الصادرة من لندن", "عداوة مسلحة وحروب مستمرة في الحدود الشمالية", "انعزال دبلوماسي تام وعدم توقيع أي اتفاقية دولية"], correct: 0 },
+            { "q": "ما هي اتفاقية 'العقير' الموقعة سنة 1341 هـ (1922 م) وما أبرز بنودها؟", "options": ["اتفاقية لترسيم الحدود بين المملكة العربية السعودية وكل من العراق الكويت", "اتفاقية تجارية لاستخراج النفط مع الشركات الأمريكية", "معاهدة سلام دائم مع حكام اليمن وجنوب الجزيرة", "اتفاقية عسكرية بحرية لتأمين موانئ الخليج"], correct: 0 },
+            { "q": "من هو الممثل السياسي البريطاني الذي فاوض الملك عبد العزيز في اتفاقية العقير سنة 1922 م؟", "options": ["سير بيرسي كوكس", "لورنس العرب", "الفريق أحمد فوزي", "خورشيد باشا"], correct: 0 },
+            { "q": "في أي عام تم اكتشاف البترول التجاري الأول في بئر الدمام رقم 7 بالمملكة؟", "options": ["عام 1357 هـ (1938 م)", "عام 1319 هـ", "عام 1345 هـ", "عام 1370 هـ"], correct: 0 },
+            { "q": "ما هي أول شركة أمريكية حصلت على امتياز التنقيب عن البترول في أراضي المملكة؟", "options": ["شركة أرامكو (ستاندرد أويل أوف كاليفورنيا)", "شركة بريتش بتروليوم البريطانية", "شركة توتال النفطية الفرنسية", "شركة شل العالمية للهيدروكربونات"], correct: 0 },
+            { "q": "كيف استثمر الملك عبد العزيز عائدات النفط الأولى في بناء الدولة وتطوير مجتمعها؟", "options": ["في توفير المياه، مد الطرق، بناء المدارس والمستشفيات، وتنمية البنية التحتية", "في اقتناء القصور الفارهة والرحلات الترفيهية", "في تخزين الأموال بالخارج وتكوين الثروات الشخصية", "في بناء أسطول عسكري لغزو الدول المجاورة"], correct: 0 },
+            { "q": "متى انضمت المملكة العربية السعودية كعضو مؤسس لهيئة الأمم المتحدة وجامعة الدول العربية؟", "options": ["عام 1945 م (1364 هـ)", "عام 1932 م", "عام 1955 م", "عام 1960 م"], correct: 0 },
+            { "q": "من هو الوزير السعودي الذي تروف بوفد المملكة ووقع ميثاق الأمم المتحدة سنة 1945 م نيابة عن الملك عبد العزيز؟", "options": ["الأمير فيصل بن عبد العزيز (وزير الخارجية)", "الأمير سعود بن عبد العزيز", "الشيخ يوسف ياسين", "الدكتور رشاد فقيها"], correct: 0 },
+            { "q": "ما هو اللقاء التاريخي الذي جمع الملك عبد العزيز بالرئيس الأمريكي فرانكلين روزفلت سنة 1945 م؟", "options": ["لقاء البحيرة الكبرى على متن المدمرة الأمريكية 'كوينسي'", "لقاء البيت الأبيض في العاصمة واشنطن", "لقاء قمة لندن في المملكة المتحدة", "لقاء قمة القاهرة بمصر"], correct: 0 },
+            { "q": "ما هي القضية العربية الكبرى التي تصدرت محادثات الملك عبد العزيز في لقائه التاريخي على متن 'كوينسي'؟", "options": ["القضية الفلسطينية والدفاع العادل عن حقوق الشعب الفلسطيني ورفض التقسيم", "أزمة الديون الخارجية للدول العربية", "ترسيم الحدود الشمالية مع دول الجوار", "شروط التنقيب عن البترول في المنطقة الشرقية"], correct: 0 },
+            { "q": "متى انتقل إلى رحمة الله مؤسس وباني أورانك المملكة الملك عبد العزيز بن عبد الرحمن آل سعود؟", "options": ["في الثاني من ربيع الأول عام 1373 هـ (الموافق 9 نوفمبر 1953 م)", "في العاشر من محرم 1350 هـ", "في الخامس عشر من رمضان 1380 هـ", "في العشرين من ذي الحجة 1390 هـ"], correct: 0 },
+            { "q": "أين توفي ودفن المؤسس العظيم الملك عبد العزيز بن عبد الرحمن آل سعود -رحمه الله-؟", "options": ["توفي في الطائف ودفن في مقبرة العود بمدينة الرياض", "توفي ودفن في المسجد الحرام بمكة المكرمة", "توفي ودفن في المسجد النبوي بالمدينة المنورة", "توفي ودفن في مدينة جدة الساحلية"], correct: 0 },
+            { "q": "من هو الملك الذي تولى مقاليد الحكم في المملكة بعد وفاة والده الملك عبد العزيز سنة 1373 هـ؟", "options": ["الملك سعود بن عبد العزيز آل سعود", "الملك فيصل بن عبد العزيز", "الملك خالد بن عبد العزيز", "الملك فهد بن عبد العزيز"], correct: 0 },
+            { "q": "ما هي أبرز الإنجازات التعليمية البارزة في عهد الملك سعود بن عبد العزيز؟", "options": ["إنشاء وزارة المعارف وتأسيس جامعة الملك سعود بالرياض سنة 1377 هـ", "إلغاء المدارس النظامية والاقتصار على الكتاتيب القديمة", "منح التعليم العالي للذكور الأجانب فقط", "إغلاق كافة المعاهد والمؤسسات التعليمية"], correct: 0 },
+            { "q": "من هو الملك الذي تولى مقاليد الحكم سنة 1384 هـ (1964 م) وعُرف بحنكته وسياساته الراسخة؟", "options": ["الملك فيصل بن عبد العزيز آل سعود", "الملك خالد بن عبد العزيز", "الملك فهد بن عبد العزيز", "الملك عبد الله بن عبد العزيز"], correct: 0 },
+            { "q": "ما هو الموقف التاريخي المشهود للملك فيصل بن عبد العزيز خلال حرب أكتوبر 1973 م؟", "options": ["استخدام سلاح البترول وقطع الإمدادات عن الدول الداعمة لإسرائيل نصرة للقضية الفلسطينية", "إعلان الحياد التام وعدم إيقاف تصدير النفط", "بيع كافة آبار النفط للولايات المتحدة الأمريكية", "المشاركة بقوات عسكرية برية في الجبهة المصرية"], correct: 0 },
+            { "q": "من هو الملك الذي تولى مقاليد الحكم بعد استشهاد الملك فيصل سنة 1395 هـ وشهد عهده طفرة تنموية كبرى؟", "options": ["الملك خالد بن عبد العزيز آل سعود", "الملك فهد بن عبد العزيز", "الملك عبد الله بن عبد العزيز", "الملك سلمان بن عبد العزيز"], correct: 0 },
+            { "q": "من هو الملك الذي اتخذ رسمياً لقب 'خادم الحرمين الشريفين' وأُقر في عهده النظام الأساسي للحكم؟", "options": ["الملك فهد بن عبد العزيز آل سعود", "الملك خالد بن عبد العزيز", "الملك فيصل بن عبد العزيز", "الملك عبد الله بن عبد العزيز"], correct: 0 },
+            { "q": "في أي عام تم إقرار 'النظام الأساسي للحكم' في عهد الملك فهد بن عبد العزيز؟", "options": ["عام 1412 هـ (1992 م)", "عام 1390 هـ", "عام 1420 هـ", "عام 1430 هـ"], correct: 0 },
+            { "q": "من هو خادم الحرمين الشريفين الذي بويع بالحكم سنة 1426 هـ وعرف بجهوده الكبرى في حوار الحضارات؟", "options": ["الملك عبد الله بن عبد العزيز آل سعود", "الملك فهد بن عبد العزيز", "الملك سلمان بن عبد العزيز", "الملك خالد بن عبد العزيز"], correct: 0 },
+            { "q": "من هو خادم الحرمين الشريفين الذي يقود مسيرة النهضة الحديثة الكبرى والهندسة الاقتصادية 'رؤية 2030'؟", "options": ["الملك سلمان بن عبد العزيز آل سعود", "الملك عبد الله بن عبد العزيز", "الملك فهد بن عبد العزيز", "الملك فيصل بن عبد العزيز"], correct: 0 },
+            { "q": "من هو ولي العهد صاحب السمو الملكي المهندس والمطلق لخطط 'رؤية السعودية 2030'؟", "options": ["الأمير محمد بن سلمان بن عبد العزيز آل سعود", "الأمير مقرن بن عبد العزيز", "الأمير نايف بن عبد العزيز", "الأمير أحمد بن عبد العزيز"], correct: 0 },
+            { "q": "ما هي الغاية الأساسية من إعداد بنك الأسئلة الموسع هذا لدراسة التاريخ السعودي؟", "options": ["تعزيز الوعي الوطني، توثيق الأمجاد، والاستعداد الأمثل لاختبارات الرخصة المهنية والمسابقات", "مجرد معلومات ترفيهية عابرة للتسلية المؤقتة", "حفظ تواريخ صماء بلا فهم للأحداث والتحليلات", "معرفة أسماء قادة الجيوش الأجنبية فقط"], correct: 0 },
+            { "q": "في أي معركة استشهد البطل الأمير عبد العزيز بن متعب آل رشيد سنة 1324 هـ؟", "options": ["معركة روضة مهنا", "معركة البكيرية", "معركة الدلم", "معركة السبلة"], correct: 0 },
+            { "q": "ما هي المدينة التي فتحها الملك عبد العزيز سنة 1331 هـ وخلصها من الحامية العثمانية؟", "options": ["الأحساء (الهفوف)", "حائل", "عسير", "مكة المكرمة"], correct: 0 },
+            { "q": "من هو القائد الذي قاد قوات الملك عبد العزيز في معركة تربة سنة 1337 هـ؟", "options": ["الأمير خالد بن لؤي", "سلطان بن بجاد", "فيصل الدويش", "محمد بن طلال"], correct: 0 },
+            { "q": "في أي عام تم ضم مدينة حائل ونهائياً تحت راية الدولة السعودية الثالثة؟", "options": ["عام 1340 هـ", "عام 1331 هـ", "عام 1343 هـ", "عام 1351 هـ"], correct: 0 },
+            { "q": "من هو آخر أمراء آل رشيد في حائل والذي استسلم سنة 1340 هـ؟", "options": ["الأمير محمد بن طلال آل رشيد", "عبد العزيز بن متعب", "متعب بن عبد الله", "سعود بن حمود"], correct: 0 },
+            { "q": "متى دخل الملك عبد العزيز مكة المكرمة سلماً في موسم الحج؟", "options": ["عام 1343 هـ", "عام 1331 هـ", "عام 1340 هـ", "عام 1351 هـ"], correct: 0 },
+            { "q": "ما هو اسم المعركة التي حسمت تمرد الإخوان سنة 1348 هـ؟", "options": ["معركة السبلة", "معركة أم رضمة", "معركة تربة", "معركة جراب"], correct: 0 },
+            { "q": "أين تقع روضة السبلة التي شهدت المعركة الفاصلة سنة 1348 هـ؟", "options": ["قرب مدينة الزلفي", "في ضواحي الرياض", "في شمال حائل", "في واحات الأحساء"], correct: 0 },
+            { "q": "ما هي المعركة اللاحقة التي جرت في شمال المملكة لإخماد بقية التمرد بعد السبلة؟", "options": ["معركة أم رضمة", "معركة الجهراء", "معركة الضلع", "معركة الشتنان"], correct: 0 },
+            { "q": "ما هو تاريخ اليوم الوطني للمملكة العربية السعودية بالميلادي؟", "options": ["23 سبتمبر من كل عام", "1 يناير من كل عام", "19 مايو من كل عام", "10 ذو الحجة من كل عام"], correct: 0 },
+            { "q": "ما هي المعاهدة التي اعترفت فيها بريطانيا باستقلال الحجاز ونجد سنة 1345 هـ؟", "options": ["معاهدة جدة", "معاهدة العقير", "اتفاقية صبحي", "معاهدة السبلة"], correct: 0 },
+            { "q": "من هو المفاوض البريطاني في اتفاقية العقير سنة 1322 هـ / 1341 هـ؟", "options": ["سير بيرسي كوكس", "لورنس العرب", "خورشيد باشا", "إبراهيم باشا"], correct: 0 },
+            { "q": "ما هو اسم البئر الذي اكتشف فيه البترول التجاري لأول مرة سنة 1357 هـ؟", "options": ["بئر الدمام رقم 7", "بئر الظهران رقم 1", "بئر الهفوف رقم 3", "بئر الجبيل رقم 5"], correct: 0 },
+            { "q": "في أي سنة أُسست جامعة الملك سعود كأول جامعة في المملكة؟", "options": ["عام 1377 هـ (1957 م)", "عام 1355 هـ", "عام 1390 هـ", "عام 1400 هـ"], correct: 0 },
+            { "q": "من هو الملك الذي قاد البلاد بحنكة خلال حرب أكتوبر واستخدم سلاح النفط؟", "options": ["الملك فيصل بن عبد العزيز", "الملك سعود بن عبد العزيز", "الملك خالد بن عبد العزيز", "الملك فهد بن عبد العزيز"], correct: 0 },
+            { "q": "من هو الملك الذي بويع بالحكم بعد استشهاد الملك فيصل سنة 1395 هـ؟", "options": ["الملك خالد بن عبد العزيز", "الملك فهد بن عبد العزيز", "الملك عبد الله بن عبد العزيز", "الملك سلمان بن عبد العزيز"], correct: 0 },
+            { "q": "في أي عام تم إقرار النظام الأساسي للحكم في المملكة؟", "options": ["عام 1412 هـ (1992 م)", "عام 1390 هـ", "عام 1420 هـ", "عام 1430 هـ"], correct: 0 },
+            { "q": "من هو الملك الذي بويع بالحكم سنة 1426 هـ وعُرف بجهوده في حوار الأديان؟", "options": ["الملك عبد الله بن عبد العزيز", "الملك فهد بن عبد العزيز", "الملك سلمان بن عبد العزيز", "الملك خالد بن عبد العزيز"], correct: 0 },
+            { "q": "من هو خادم الحرمين الشريفين قائد مسيرة رؤية السعودية 2030؟", "options": ["الملك سلمان بن عبد العزيز", "الملك عبد الله بن عبد العزيز", "الملك فهد بن عبد العزيز", "الملك فيصل بن عبد العزيز"], correct: 0 },
+            { "q": "من هو ولي العهد مطلق رؤية السعودية 2030؟", "options": ["الأمير محمد بن سلمان بن عبد العزيز", "الأمير مقرن بن عبد العزيز", "الأمير نايف بن عبد العزيز", "الأمير أحمد بن عبد العزيز"], correct: 0 },
+            { "q": "ما هي المعركة الأولى التي خاضها الملك عبد العزيز ضد ابن رشيد سنة 1321 هـ؟", "options": ["معركة البكيرية", "معركة الدلم", "معركة الصريف", "معركة جهام"], correct: 0 },
+            { "q": "أين وقعت معركة الدلم التي انتصر فيها الملك عبد العزيز سنة 1322 هـ؟", "options": ["في إقليم الخرج", "في القصيم", "في حائل", "في الأحساء"], correct: 0 },
+            { "q": "من هو القائد العثماني الذي قاد الحملة لدعم آل رشيد في القصيم؟", "options": ["الفريق أحمد فوزي باشا", "إبراهيم باشا", "خورشيد باشا", "طوسون باشا"], correct: 0 },
+            { "q": "في أي سنة تم فتح مدينة الرياض وبداية الدولة السعودية الثالثة؟", "options": ["عام 1319 هـ (1902 م)", "عام 1310 هـ", "عام 1325 هـ", "عام 1351 هـ"], correct: 0 },
+            { "q": "كم عدد رجال الملك عبد العزيز في عملية استرداد الرياض؟", "options": ["63 رجلاً", "100 رجل", "40 رجلاً", "500 رجل"], correct: 0 },
+            { "q": "ما هو اسم قصر الحكم الذي استولى عليه الملك عبد العزيز ليلة استرداد الرياض؟", "options": ["قصر المصمك", "قصر المربع", "قصر الحكم", "قصر الطريف"], correct: 0 },
+            { "q": "من هو أمير الرياض الذي قُتل في المصمك سنة 1319 هـ؟", "options": ["عجلان بن محمد العجلان", "دهام بن دواس", "محمد بن عبد الله آل رشيد", "سالم بن سبحان"], correct: 0 },
+            { "q": "من هو الإمام والد الملك عبد العزيز الذي تنازل له عن الإمارة؟", "options": ["الإمام عبد الرحمن بن فيصل", "الإمام فيصل بن تركي", "الإمام عبد الله بن فيصل", "الإمام تركي بن عبد الله"], correct: 0 },
+            { "q": "في أي عام تم فتح الأحساء وتخليصها من الحامية العثمانية؟", "options": ["عام 1331 هـ (1913 م)", "عام 1319 هـ", "عام 1341 هـ", "عام 1351 هـ"], correct: 0 },
+            { "q": "ما هو اسم القصر الذي اقتحم ليلة فتح الأحساء؟", "options": ["قصر الكوت", "قصر المصمك", "قصر المربع", "قصر الصخور"], correct: 0 },
+            { "q": "في أي عام تم دخول مكة المكرمة وضمه للحجاز؟", "options": ["عام 1343 هـ", "عام 1331 هـ", "عام 1340 هـ", "عام 1351 هـ"], correct: 0 },
+            { "q": "من هو الشريف الذي انسحب من مكة إلى جدة؟", "options": ["الشريف علي بن الحسين", "الشريف حسين بن علي", "الشريف عبد المعين", "الشريف خالد بن لؤي"], correct: 0 },
+            { "q": "متى صدر المرسوم الملكي بتوحيد اسم الدولة إلى المملكة العربية السعودية؟", "options": ["17 جمادى الأولى 1351 هـ", "1 محرم 1350 هـ", "15 ربيع الأول 1344 هـ", "10 ذو الحجة 1360 هـ"], correct: 0 },
+            { "q": "ما هي المعاهدة التي اعترفت باستقلال الحجاز ونجد سنة 1345 هـ؟", "options": ["معاهدة جدة", "معاهدة العقير", "اتفاقية صبحي", "معاهدة السبلة"], correct: 0 },
+            { "q": "في أي عام توفي الملك المؤسس عبد العزيز بن عبد الرحمن؟", "options": ["عام 1373 هـ (1953 م)", "عام 1350 هـ", "عام 1380 هـ", "عام 1390 هـ"], correct: 0 }
+        ];
+
+        var cardsData = [];
+        var originalCardsData = [];
+        var letters = ["أ", "ب", "ج", "د"];
+        var currentIndex = 0;
+        var score = 0;
+        var answersState = {};
+
+        function shuffleOptions(options, correctIndex) {
+            let indices = options.map((_, i) => i);
+            for (let i = indices.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                let temp = indices[i];
+                indices[i] = indices[j];
+                indices[j] = temp;
+            }
+            let shuffledOptions = indices.map(i => options[i]);
+            let newCorrectIndex = indices.indexOf(correctIndex);
+            return {
+                options: shuffledOptions,
+                correct: newCorrectIndex
+            };
+        }
+
+        function initQuizData() {
+            cardsData = rawCardsData.map(card => {
+                let cloned = JSON.parse(JSON.stringify(card));
+                let shuffled = shuffleOptions(cloned.options, cloned.correct);
+                cloned.options = shuffled.options;
+                cloned.correct = shuffled.correct;
+                return cloned;
+            });
+            originalCardsData = JSON.parse(JSON.stringify(cardsData));
+        }
+
+        const canvas = document.getElementById('drawCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let penActive = false;
+        let penColor = '#e11d48';
+        let penSize = 2.5;
+        let lastX = 0;
+        let lastY = 0;
+
+        function resizeCanvas() {
+            const wrapper = document.getElementById('quiz-app-wrapper');
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tCtx = tempCanvas.getContext('2d');
+            tCtx.drawImage(canvas, 0, 0);
+
+            canvas.width = wrapper.offsetWidth;
+            canvas.height = wrapper.offsetHeight;
+            
+            ctx.drawImage(tempCanvas, 0, 0);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('load', () => {
+            initQuizData();
+            resizeCanvas();
+            render();
+        });
+
+        function togglePen() {
+            penActive = !penActive;
+            const btn = document.getElementById('penToggleBtn');
+            const toolbar = document.getElementById('penToolbar');
+            
+            if (penActive) {
+                canvas.classList.add('drawing-active');
+                btn.classList.add('active');
+                btn.innerHTML = "✏️ إيقاف القلم";
+                toolbar.style.display = "flex";
+            } else {
+                canvas.classList.remove('drawing-active');
+                btn.classList.remove('active');
+                btn.innerHTML = "✏️ قلم الشرح الحقيقي";
+                toolbar.style.display = "none";
+            }
+        }
+
+        function setPenColor(color, element) {
+            penColor = color;
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function setPenSize(size) {
+            penSize = parseFloat(size);
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            return {
+                x: (clientX - rect.left) * (canvas.width / rect.width),
+                y: (clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        canvas.addEventListener('mousedown', startDraw);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDraw);
+        canvas.addEventListener('mouseleave', stopDraw);
+
+        canvas.addEventListener('touchstart', (e) => { startDraw(e); e.preventDefault(); }, { passive: false });
+        canvas.addEventListener('touchmove', (e) => { draw(e); e.preventDefault(); }, { passive: false });
+        canvas.addEventListener('touchend', stopDraw);
+
+        function startDraw(e) {
+            if (!penActive) return;
+            isDrawing = true;
+            const pos = getPos(e);
+            lastX = pos.x;
+            lastY = pos.y;
+        }
+
+        function draw(e) {
+            if (!isDrawing || !penActive) return;
+            const pos = getPos(e);
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.strokeStyle = penColor;
+            ctx.lineWidth = penSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            lastX = pos.x;
+            lastY = pos.y;
+        }
+
+        function stopDraw() {
+            isDrawing = false;
+        }
+
+        function render() {
+            if (cardsData.length === 0) {
+                showResult();
+                return;
+            }
+            if (currentIndex >= cardsData.length) {
+                currentIndex = cardsData.length - 1;
+            }
+
+            var item = cardsData[currentIndex];
+            document.getElementById("q-badge").innerText = "السؤال " + (currentIndex + 1);
+            document.getElementById("q-text").innerText = item.q;
+            document.getElementById("question-count").innerText = "السؤال " + (currentIndex + 1) + " من " + cardsData.length;
+            document.getElementById("total-q-badge").innerText = cardsData.length;
+            document.getElementById("progressBar").style.width = ((currentIndex + 1) / cardsData.length * 100) + "%";
+
+            document.getElementById("btn-prev").disabled = (currentIndex === 0);
+            document.getElementById("btn-next").disabled = (currentIndex === cardsData.length - 1);
+
+            var container = document.getElementById("options-container");
+            container.innerHTML = "";
+
+            var hasAnswered = answersState.hasOwnProperty(currentIndex);
+
+            for (var idx = 0; idx < item.options.length; idx++) {
+                (function(i) {
+                    var btn = document.createElement("button");
+                    btn.className = "opt-btn";
+                    
+                    var checkHtml = "";
+                    if (hasAnswered && i === item.correct) {
+                        checkHtml = '<span class="check-mark">✔</span>';
+                    }
+
+                    btn.innerHTML = '<span class="opt-text">' + item.options[i] + '</span>' + checkHtml + '<span class="opt-letter">' + letters[i] + '</span>';
+
+                    if (hasAnswered) {
+                        btn.disabled = true;
+                        if (i === item.correct) btn.className += " correct";
+                        else if (i === answersState[currentIndex]) btn.className += " wrong";
+                    } else {
+                        btn.onclick = function() {
+                            selectOption(i);
+                        };
+                    }
+                    container.appendChild(btn);
+                })(idx);
+            }
+            resizeCanvas();
+        }
+
+        function selectOption(selectedIndex) {
+            if (answersState.hasOwnProperty(currentIndex)) return;
+            answersState[currentIndex] = selectedIndex;
+            var item = cardsData[currentIndex];
+
+            if (selectedIndex === item.correct) {
+                score++;
+                document.getElementById("score-count").innerText = "النقاط: " + score;
+            }
+            render();
+        }
+
+        function editCurrentQuestion() {
+            var currentQ = cardsData[currentIndex];
+            var newQText = prompt("تعديل نص السؤال الحالي:", currentQ.q);
+            if (newQText === null) return;
+
+            var newOpts = [];
+            for (var i = 0; i < currentQ.options.length; i++) {
+                var optVal = prompt("تعديل الخيار رقم " + (i + 1) + " (أو حرف " + letters[i] + "):", currentQ.options[i]);
+                if (optVal === null) return;
+                newOpts.push(optVal);
+            }
+
+            var newCorrect = prompt("حدد رقم الخيار الصحيح (من 1 إلى " + currentQ.options.length + ")، حيث الحالية هي رقم " + (currentQ.correct + 1) + ":", currentQ.correct + 1);
+            if (newCorrect === null) return;
+            var correctIdx = parseInt(newCorrect) - 1;
+            if (isNaN(correctIdx) || correctIdx < 0 || correctIdx >= newOpts.length) {
+                alert("رقم الإجابة غير صحيح، تم إبقاء الإجابة السابقة.");
+                correctIdx = currentQ.correct;
+            }
+
+            currentQ.q = newQText;
+            currentQ.options = newOpts;
+            currentQ.correct = correctIdx;
+
+            var rawItem = rawCardsData[currentIndex];
+            if (rawItem) {
+                rawItem.q = newQText;
+                rawItem.options = [...newOpts];
+                rawItem.correct = correctIdx;
+            }
+
+            render();
+            alert("تم تعديل السؤال بنجاح!");
+        }
+
+        function resetCurrentAnswer() {
+            if (answersState.hasOwnProperty(currentIndex)) {
+                var prevSelected = answersState[currentIndex];
+                var item = cardsData[currentIndex];
+                if (prevSelected === item.correct) {
+                    score = Math.max(0, score - 1);
+                    document.getElementById("score-count").innerText = "النقاط: " + score;
+                }
+                delete answersState[currentIndex];
+                render();
+            }
+        }
+
+        function deleteCurrentQuestion() {
+            if (confirm("هل أنت متأكد من حذف هذه الشريحة / السؤال نهائياً؟")) {
+                if (answersState.hasOwnProperty(currentIndex)) {
+                    var prevSelected = answersState[currentIndex];
+                    if (prevSelected === cardsData[currentIndex].correct) {
+                        score = Math.max(0, score - 1);
+                        document.getElementById("score-count").innerText = "النقاط: " + score;
+                    }
+                }
+                cardsData.splice(currentIndex, 1);
+                rawCardsData.splice(currentIndex, 1);
+                delete answersState[currentIndex];
+                var newAnswers = {};
+                var keys = Object.keys(answersState).sort(function(a,b){return a-b;});
+                for(var k=0; k<keys.length; k++) {
+                    if(keys[k] > currentIndex) {
+                        newAnswers[keys[k]-1] = answersState[keys[k]];
+                    } else if(keys[k] < currentIndex) {
+                        newAnswers[keys[k]] = answersState[keys[k]];
+                    }
+                }
+                answersState = newAnswers;
+                clearCanvas();
+
+                if (currentIndex >= cardsData.length && currentIndex > 0) {
+                    currentIndex--;
+                }
+                render();
+            }
+        }
+
+        function nextQ() {
+            if (currentIndex < cardsData.length - 1) {
+                currentIndex++;
+                clearCanvas();
+                render();
+            }
+        }
+
+        function prevQ() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                clearCanvas();
+                render();
+            }
+        }
+
+        function showResult() {
+            document.getElementById("quiz-screen").style.display = "none";
+            document.getElementById("result-screen").style.display = "block";
+            document.getElementById("final-score").innerText = score + " / " + cardsData.length;
+            var percentage = cardsData.length > 0 ? (score / cardsData.length) * 100 : 0;
+            var msg = percentage >= 90 ? "أداء استثنائي مذهل! إحاطة شاملة بتاريخ وتأسيس الدولة السعودية الثالثة." :
+                      percentage >= 75 ? "مستوى ممتاز جداً! أحسنت." :
+                      "مستوى جيد، استمر في مراجعة التاريخ.";
+            document.getElementById("result-message").innerText = msg;
+        }
+
+        function restartQuiz() {
+            initQuizData();
+            currentIndex = 0; score = 0;
+            answersState = {};
+            clearCanvas();
+            document.getElementById("score-count").innerText = "النقاط: 0";
+            document.getElementById("result-screen").style.display = "none";
+            document.getElementById("quiz-screen").style.display = "block";
+            render();
+        }
+
+        async function exportImage() {
+            const wasPenActive = penActive;
+            if (penActive) togglePen();
+
+            if (!answersState.hasOwnProperty(currentIndex)) {
+                answersState[currentIndex] = cardsData[currentIndex].correct;
+                render();
+            }
+
+            await document.fonts.ready;
+            html2canvas(document.getElementById("quiz-app-wrapper"), { scale: 2.5, useCORS: true }).then(canvasImg => {
+                const link = document.createElement("a");
+                link.download = `الدولة_السعودية_الثالثة_ج2_${currentIndex + 1}.png`;
+                link.href = canvasImg.toDataURL("image/png");
+                link.click();
+
+                if (wasPenActive) togglePen();
+            });
+        }
+
+        function saveModifiedFile() {
+            var fullHtml = document.documentElement.outerHTML;
+            var startMarker = "var rawCardsData = [";
+            var endMarker = "var cardsData = [];";
+            
+            var startIndex = fullHtml.indexOf(startMarker);
+            var endIndex = fullHtml.indexOf(endMarker);
+            
+            if (startIndex !== -1 && endIndex !== -1) {
+                var newScriptBlock = "var rawCardsData = " + JSON.stringify(rawCardsData, null, 4) + ";\n        var cardsData = [];";
+                fullHtml = fullHtml.substring(0, startIndex) + newScriptBlock + fullHtml.substring(endIndex + endMarker.length);
+            }
+
+            var blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "saudi_third_state_q75_group2.html";
+            a.click();
+        }
+
+        function printAllQuestionsPDF() {
+            var printWin = window.open('', '_blank');
+            var html = '<html dir="rtl"><head><title>تاريخ الدولة السعودية الثالثة - الجزء الثاني</title>';
+            html += '<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&display=swap" rel="stylesheet">';
+            html += '<style>body{font-family:Cairo,sans-serif;padding:20px;direction:rtl;color:#0f172a;}';
+            html += '.q-box{margin-bottom:18px;border-bottom:1px solid #cbd5e1;padding-bottom:12px;page-break-inside:avoid;}';
+            html += '.q-title{font-weight:900;font-size:16px;margin-bottom:8px;color:#071c3d;}';
+            html += '.opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:14px;font-weight:700;}';
+            html += '.correct{color:#047857;font-weight:900;}';
+            html += 'h1{text-align:center;color:#071c3d;margin-bottom:25px;font-size:24px;}';
+            html += '</style></head><body>';
+            html += '<h1>الدولة السعودية الثالثة - الجزء الثاني (75 سؤال)<br><span style="font-size:14px;color:#475569;">إعداد: إبراهيم أبوزيد</span></h1>';
+
+            for (var i = 0; i < cardsData.length; i++) {
+                var item = cardsData[i];
+                html += '<div class="q-box">';
+                html += '<div class="q-title">' + (i + 1) + '. ' + item.q + '</div>';
+                html += '<div class="opts">';
+                for (var j = 0; j < item.options.length; j++) {
+                    var isCor = (j === item.correct) ? ' class="correct"' : '';
+                    html += '<div' + isCor + '>(' + letters[j] + ') ' + item.options[j] + (isCor ? ' ✔' : '') + '</div>';
+                }
+                html += '</div></div>';
+            }
+
+            html += '</body></html>';
+            printWin.document.write(html);
+            printWin.document.close();
+            printWin.focus();
+            setTimeout(function() {
+                printWin.print();
+            }, 600);
+        }
+    </script>
+
+</body>
+</html>
